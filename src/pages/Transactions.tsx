@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import TransactionsTable, { PaginationControls } from '../components/tables/TransactionsTable';
+import { motion } from 'framer-motion';
+import TransactionsTable from '../components/tables/TransactionsTable';
 import { MagnifyingGlassIcon, FunnelIcon, CalendarDaysIcon } from '@heroicons/react/24/outline';
 
 // Extended mock data for better pagination demonstration
@@ -193,25 +193,27 @@ export default function Transactions() {
     // Date range filter (simplified for demo)
     if (dateRange !== 'all') {
       const now = new Date();
-      const transactionDate = new Date(filtered[0]?.date || now);
-      
+
       switch (dateRange) {
-        case 'today':
+        case 'today': {
           filtered = filtered.filter(t => {
             const tDate = new Date(t.date);
             return tDate.toDateString() === now.toDateString();
           });
           break;
-        case 'week':
+        }
+        case 'week': {
           const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
           filtered = filtered.filter(t => new Date(t.date) >= weekAgo);
           break;
-        case 'month':
+        }
+        case 'month': {
           filtered = filtered.filter(t => {
             const tDate = new Date(t.date);
             return tDate.getMonth() === now.getMonth() && tDate.getFullYear() === now.getFullYear();
           });
           break;
+        }
       }
     }
 

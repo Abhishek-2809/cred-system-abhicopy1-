@@ -13,26 +13,28 @@ const ctaMessages = {
 };
 
 export default function ApplyCard() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: Record<string, unknown>) => {
+    void data;
     setIsSubmitting(true);
     setSubmitStatus('idle');
 
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Simulate success/failure
       const isSuccess = Math.random() > 0.3;
-      
+
       if (isSuccess) {
         setSubmitStatus('success');
       } else {
         setSubmitStatus('error');
       }
     } catch (error) {
+      console.error(error);
       setSubmitStatus('error');
     } finally {
       setIsSubmitting(false);

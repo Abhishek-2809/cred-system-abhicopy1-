@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 
 interface User {
   id: string;
@@ -35,6 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   const login = async (email: string, password: string) => {
+    void password;
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     setUser({
@@ -67,4 +68,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export { AuthContext }
+export { AuthContext };

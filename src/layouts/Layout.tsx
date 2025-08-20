@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import Sidebar from '../components/layout/Sidebar';
 import TopNav from '../components/layout/TopNav';
-import { useTheme } from '../contexts/ThemeContext';
 import clsx from 'clsx';
 
 interface LayoutProps {
@@ -30,7 +29,6 @@ export default function Layout({ children }: LayoutProps) {
     return true;
   });
 
-  const { theme } = useTheme();
 
   // Handle window resize
   useEffect(() => {

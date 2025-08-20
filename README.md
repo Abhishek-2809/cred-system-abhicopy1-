@@ -100,6 +100,21 @@ Email: john.doe@example.com
 Password: password123
 ```
 
+## 🔧 Backend API
+
+The backend is powered by **Node.js**, **Express**, **Prisma**, and **PostgreSQL**.
+
+### Setup
+```bash
+cd backend
+npm install
+cp .env.example .env
+npx prisma generate
+npm run dev
+```
+
+The API listens on `http://localhost:3000` by default.
+
 ## 🏗 Project Structure
 
 ```
