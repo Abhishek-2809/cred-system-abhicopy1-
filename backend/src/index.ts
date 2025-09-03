@@ -2,17 +2,27 @@ import dotenv from 'dotenv';
 import express from 'express';
 import authRoutes from './routes/auth';
 import cardRoutes from './routes/cards';
+import cors from 'cors';
 import transactionRoutes from './routes/transactions';
 import paymentRoutes from './routes/payments';
 import rewardRoutes from './routes/rewards';
 import disputeRoutes from './routes/disputes';
 import notificationRoutes from './routes/notifications';
 
+
+
+
+
+
+
 dotenv.config();
 console.log('DB=', process.env.DATABASE_URL);
 
 const app = express();
 app.use(express.json());
+const origin = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
+app.use(cors({ origin, credentials: true }));
+
 
 app.use('/auth', authRoutes);
 app.use('/cards', cardRoutes);

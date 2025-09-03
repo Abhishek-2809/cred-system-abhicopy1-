@@ -1,71 +1,71 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useEffect, useState } from 'react';
+import api from '../lib/api';
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  avatar?: string;
-}
+type User = { id: number; email: string } | null;
 
-interface AuthContextType {
-  user: User | null;
+export type AuthContextValue = {
+  user: User;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  updateUser: (updates: Partial<User>) => void;
+  register: (name: string, email: string, password: string) => Promise<void>; // 👈 new
+};
+
+// ✅ export the context (named)
+export const AuthContext = createContext<AuthContextValue | null>(null);
+
+function parseJwt<T = any>(t: string): T {
+  try { return JSON.parse(atob(t.split('.')[1])); } catch { return {} as T; }
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
+  const [user, setUser] = useState<User>(null);
+  const [token, setToken] = useState<string | null>(null);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('user');
-    return saved ? JSON.parse(saved) : {
-      id: '1',
-      name: 'John Doe',
-      email: 'john.doe@example.com',
-      avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2'
-    };
-  });
-
+  // load saved auth on mount
   useEffect(() => {
-    if (user) {
-      localStorage.setItem('user', JSON.stringify(user));
+    const savedUser = localStorage.getItem('user');
+    const savedToken = localStorage.getItem('accessToken');
+    if (savedUser && savedToken) {
+      setUser(JSON.parse(savedUser));
+      setToken(savedToken);
+      api.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
     }
-  }, [user]);
+  }, []);
 
   const login = async (email: string, password: string) => {
-    void password;
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setUser({
-      id: '1',
-      name: 'John Doe',
-      email,
-      avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2'
-    });
+    const { data } = await api.post('/auth/login', { email, password });
+    const accessToken: string = data.accessToken ?? data.token;
+    if (!accessToken) throw new Error('No token from server');
+
+    // persist + set header
+    localStorage.setItem('accessToken', accessToken);
+    api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+    setToken(accessToken);
+
+    // build minimal user from JWT
+    const payload = parseJwt<{ userId?: number; sub?: number; email?: string }>(accessToken);
+    const u = { id: (payload.userId ?? payload.sub) as number, email: payload.email ?? email };
+    setUser(u);
+    localStorage.setItem('user', JSON.stringify(u));
+  };
+
+  const register = async (name: string, email: string, password: string) => {
+    await api.post('/auth/register', { name, email, password });
+    // Do NOT auto-login here. We’ll redirect to /login after success.
   };
 
   const logout = () => {
-    setUser(null);
+    localStorage.removeItem('accessToken');
     localStorage.removeItem('user');
-  };
-
-  const updateUser = (updates: Partial<User>) => {
-    setUser(prev => prev ? { ...prev, ...updates } : null);
+    delete api.defaults.headers.common['Authorization'];
+    setToken(null);
+    setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      isAuthenticated: !!user, 
-      login, 
-      logout,
-      updateUser
-    }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!token, login, logout, register }}>
       {children}
     </AuthContext.Provider>
   );
-}
-
-export { AuthContext };
+};

@@ -1,28 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { motion } from 'framer-motion';
-import { EnvelopeIcon, LockClosedIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { EnvelopeIcon, LockClosedIcon, UserIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { AuthContext } from '../contexts/AuthContext';
 
-export default function Login() {
-  const [email, setEmail] = useState('u1@example.com');
+export default function Register() {
+  const [name, setName] = useState('User One');
+  const [email, setEmail] = useState('u2@example.com');
   const [password, setPassword] = useState('pass123');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [ok, setOk] = useState(false);
 
-  const { login } = useAuth();
+  const ctx = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!ctx) return;
     setIsLoading(true);
     setErr(null);
     try {
-      await login(email, password);
-      navigate('/dashboard', { replace: true });
+      await ctx.register(name, email, password);
+      setOk(true);
+      // small pause then go to login
+      setTimeout(() => navigate('/login', { replace: true }), 800);
     } catch (error: any) {
-      setErr(error?.response?.data?.error || 'Login failed');
+      setErr(error?.response?.data?.error || 'Registration failed');
     } finally {
       setIsLoading(false);
     }
@@ -38,8 +43,8 @@ export default function Login() {
                 <span className="text-2xl font-bold text-white">CF</span>
               </div>
             </div>
-            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">Welcome back</h2>
-            <p className="text-neutral-600 dark:text-neutral-400 mt-2">Sign in to your CreditFlow account</p>
+            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">Create your account</h2>
+            <p className="text-neutral-600 dark:text-neutral-400 mt-2">Join CreditFlow in seconds</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -48,6 +53,26 @@ export default function Login() {
                 {err}
               </div>
             )}
+            {ok && (
+              <div className="rounded-md bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 px-4 py-3 text-sm text-green-700 dark:text-green-200">
+                Registered! Redirecting to login…
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Full name</label>
+              <div className="relative">
+                <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-neutral-900 dark:text-white"
+                  placeholder="Your name"
+                  required
+                />
+              </div>
+            </div>
 
             <div>
               <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Email Address</label>
@@ -73,7 +98,7 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-10 pr-12 py-3 rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-neutral-900 dark:text-white"
-                  placeholder="Enter your password"
+                  placeholder="Choose a password"
                   required
                 />
                 <button
@@ -86,14 +111,6 @@ export default function Login() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <label className="flex items-center">
-                <input type="checkbox" className="w-4 h-4 text-primary-600 bg-neutral-100 border-neutral-300 rounded focus:ring-primary-500 focus:ring-2" />
-                <span className="ml-2 text-sm text-neutral-600 dark:text-neutral-400">Remember me</span>
-              </label>
-              <a href="#" className="text-sm text-primary-600 dark:text-primary-400 hover:underline">Forgot password?</a>
-            </div>
-
             <motion.button
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.98 }}
@@ -101,29 +118,13 @@ export default function Login() {
               disabled={isLoading}
               className="w-full px-4 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-md transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Signing in...' : 'Sign in'}
+              {isLoading ? 'Creating account…' : 'Create account'}
             </motion.button>
           </form>
 
-          {/* Public links */}
-          <div className="mt-6 grid gap-3">
-            <Link
-              to="/apply"
-              className="inline-flex w-full justify-center rounded-md border border-primary-600 px-4 py-3 font-medium text-primary-600 hover:bg-primary-50 dark:hover:bg-neutral-800/50"
-            >
-              Apply for a Credit Card
-            </Link>
-
-            <p className="text-center text-sm">
-              <span className="text-neutral-600 dark:text-neutral-400">New here? </span>
-              <Link to="/register" className="text-primary-600 dark:text-primary-400 hover:underline">
-                Create an account
-              </Link>
-            </p>
-
-            <p className="text-center text-neutral-600 dark:text-neutral-400 text-sm">
-              Demo credentials: u1@example.com / pass123
-            </p>
+          <div className="mt-8 text-center text-sm">
+            <span className="text-neutral-600 dark:text-neutral-400">Already have an account? </span>
+            <Link to="/login" className="text-primary-600 dark:text-primary-400 hover:underline">Sign in</Link>
           </div>
         </div>
       </motion.div>
